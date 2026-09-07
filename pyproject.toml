@@ -22,4 +22,3 @@ Icon = ""
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-</content>
