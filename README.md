@@ -1,8 +1,21 @@
-# ComfyUI-Kimodo
+# ComfyUI-Kimodo-Enhanced
 
-A ComfyUI plugin that wraps [Kimodo](https://github.com/nv-tlabs/kimodo) — NVIDIA's kinematic motion diffusion model for generating high-quality 3D human and humanoid robot motions from text prompts with optional kinematic constraints.
+A ComfyUI plugin that wraps [Kimodo](https://github.com/nv-tlabs/kimodo) — NVIDIA's kinematic motion-diffusion model — to generate high-quality 3D human and humanoid-robot motion from text prompts, and **retarget it onto your own rigged characters**.
 
-[中文说明](README_CN.md)
+This is an enhanced fork of [ComfyUI-Kimodo](https://github.com/jtydhr88/ComfyUI-Kimodo). It keeps the original text-to-motion pipeline and adds a rebuilt **retarget/export** stack: a new **glb export** path alongside FBX, plus fixes for the real-world rig problems (A-pose arms, fingers, orientation, and travelling root motion) that the original T-pose-only retarget could not handle.
+## What's new in this fork
+
+Everything below is added on top of upstream ComfyUI-Kimodo:
+
+- **GLB retarget + export** — a new **Kimodo Export GLB** node retargets motion onto a rigged `.glb` character (loaded via ComfyUI's Load3D input) and writes the animation back as glTF samplers/channels. The FBX-Mixamo path is retained.
+- **A-pose retarget fix (arm "flapping")** — a rest-**direction**-aware correction drives each target bone to point where the source bone points every frame, so A-pose rigs no longer over-rotate their arms. Strictly reduces to the original behaviour for T-pose rigs. Exposed as the **`auto_fix_input_pose`** toggle (default OFF).
+- **Travelling root motion** — root/hip displacement is now converted through the parent's full inverse world transform (rotation **and** scale), so Mixamo-cm rigs (Armature scale 0.01) travel correctly instead of "walking on the spot." **`animate_in_place`** toggle (default OFF) pins horizontal travel while keeping vertical bob/jump.
+- **Orientation fix (GLB)** — **`fix_orientation`** toggle (default OFF) rescues rigs that animate face-down, snapping the character upright by a clean 90° tilt without changing its facing.
+- **Sensible finger handling** — **`map_fingers`** defaults OFF to avoid the "claw / spastic hands" from mismatched SOMA↔rig finger rest poses; the body animates, hands stay in their natural rest.
+- **Robust bone matching** — retarget matches bones across skeleton name-prefix mismatches.
+- **Stale-clip cleanup** — GLB export strips any pre-existing bind/rest clip so viewers play the generated motion instead of a frozen 2-keyframe placeholder.
+
+See [CLAUDE.md](CLAUDE.md) for the full technical rationale behind each of these.
 
 ## Features
 
@@ -10,11 +23,12 @@ A ComfyUI plugin that wraps [Kimodo](https://github.com/nv-tlabs/kimodo) — NVI
 - **Multiple Skeleton Types** — SOMA human body, SMPLX, and Unitree G1 humanoid robot
 - **Kinematic Constraints** — Optional JSON constraints for pose keyframes, end-effector positions, 2D paths
 - **Multi-Prompt Segments** — Chain multiple motion descriptions with smooth transitions
-- **Multiple Samples** — Generate batch of motion variations from the same prompt
+- **Multiple Samples** — Generate a batch of motion variations from the same prompt
 - **NPZ Export** — Save motion data (joint positions, rotations, foot contacts, trajectories)
 - **BVH Export** — Export to BVH format for animation software (SOMA skeletons)
 - **FBX Export (Mixamo)** — Retarget motion onto Mixamo-rigged FBX characters and export animated FBX
-- **2D Preview** — Skeleton stick-figure visualization as ComfyUI IMAGE output
+- **GLB Export (Mixamo)** — Retarget motion onto a rigged glb character and export animated glTF
+- **2D / 3D Preview** — Skeleton visualization as ComfyUI outputs
 - **HuggingFace Auto-Download** — Models download automatically on first use (~17GB VRAM)
 
 ## Nodes
@@ -37,6 +51,20 @@ A ComfyUI plugin that wraps [Kimodo](https://github.com/nv-tlabs/kimodo) — NVI
 | **Kimodo Save NPZ** | Save motion data as NPZ files |
 | **Kimodo Export BVH** | Export motion to BVH format (SOMA skeletons only) |
 | **Kimodo Export FBX (Mixamo)** | Retarget and export motion to a Mixamo-rigged FBX character |
+| **Kimodo Export GLB (Mixamo)** | Retarget and export motion to a rigged glb character |
+
+### Retarget toggles (Export FBX / GLB)
+
+The export nodes retarget Kimodo's SOMA motion onto your character's skeleton. Real rigs are rarely T-posed, so a few opt-in corrections are provided:
+
+| Toggle | Nodes | Default | What it does |
+|--------|-------|---------|--------------|
+| `auto_fix_input_pose` | FBX, GLB | OFF | Rest-direction-aware correction for **A-pose** rigs (fixes arm flapping). No-op / exact legacy behaviour on a T-pose rig, so it never alters a T-posed mesh. Turn ON for an A-pose rig. |
+| `map_fingers` | FBX, GLB | OFF | Retarget finger bones. Leave OFF unless the rig's fingers align well with SOMA — otherwise the hands claw up. |
+| `animate_in_place` | FBX, GLB | OFF | Zero the character's horizontal travel (keeps vertical bob/jump) so it animates on the spot. |
+| `fix_orientation` | GLB | OFF | Snap a rig that animates face-down back upright (clean 90° tilt, facing unchanged). No-op for an already-upright rig. |
+
+By default (all OFF) the retarget matches upstream behaviour and is aimed at T-posed rigs; turn on `auto_fix_input_pose` for A-pose characters.
 
 ## Installation
 
@@ -44,13 +72,13 @@ Clone this repository into your ComfyUI `custom_nodes` directory:
 
 ```bash
 cd ComfyUI/custom_nodes
-git clone https://github.com/jtydhr88/ComfyUI-Kimodo.git
+git clone https://github.com/stevelittlefish/ComfyUI-Kimodo-Enhanced.git
 ```
 
 Install dependencies:
 
 ```bash
-cd ComfyUI-Kimodo
+cd ComfyUI-Kimodo-Enhanced
 pip install -r requirements.txt
 ```
 
@@ -117,7 +145,7 @@ pip install -e .
 
 Verify: `python -c "import motion_correction; print('OK')"`
 
-> Without this module, set `post_processing = False` in the Generate node. The motion will still work but may have foot-sliding artifacts.
+> Without this module, set `post_processing = False` in the Sampler/Post Process node. The motion will still work but may have foot-sliding artifacts.
 
 ### FBX Export (Optional)
 
@@ -128,6 +156,8 @@ pip install fbxsdkpy --extra-index-url https://gitlab.inria.fr/api/v4/projects/1
 ```
 
 You also need a Mixamo-rigged FBX character file. Download one from [Mixamo](https://www.mixamo.com/) (select "Without Skin" or "T-Pose" for best results).
+
+The **Kimodo Export GLB** node needs no extra SDK — it reads and writes glTF directly.
 
 ## Usage
 
@@ -143,8 +173,7 @@ Load Model → Text Encode → Sampler → Post Process → Export/Preview
 2. Add **Kimodo Text Encode** — enter text prompt (reusable across different seeds)
 3. Add **Kimodo Sampler** — set duration, seed, diffusion steps
 4. Add **Kimodo Post Process** — optional foot-skate cleanup
-5. Add **Kimodo Preview** / **Kimodo Export BVH** / **Kimodo Export FBX** — visualize or save
-
+5. Add **Kimodo Preview** / **Export BVH** / **Export FBX** / **Export GLB** — visualize or save
 
 ### Parameters
 
@@ -179,8 +208,12 @@ The NPZ output contains:
 
 ## Credits
 
-This plugin wraps [Kimodo](https://github.com/nv-tlabs/kimodo)g.
+This project is an enhanced fork of **[ComfyUI-Kimodo](https://github.com/jtydhr88/ComfyUI-Kimodo)** by **[jtydhr88](https://github.com/jtydhr88)** — huge thanks to them for the original ComfyUI integration, which does all the heavy lifting of wrapping the model into nodes. This fork simply builds a better retarget/export stack on top of that foundation.
+
+It in turn wraps [Kimodo](https://github.com/nv-tlabs/kimodo), NVIDIA's kinematic motion-diffusion model.
 
 ## License
 
 Apache-2.0
+</content>
+</invoke>

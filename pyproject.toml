@@ -1,22 +1,25 @@
 [project]
-name = "comfyui-kimodo"
-description = "ComfyUI nodes for Kimodo — text-driven 3D human motion generation with kinematic constraints"
-version = "0.1.0"
+name = "comfyui-kimodo-enhanced"
+version = "1.0.0"
+description = "Enhanced fork of ComfyUI-Kimodo — text-driven 3D human motion (NVIDIA Kimodo) with a rebuilt retarget/export stack: glb + FBX export, A-pose arm fix, travelling root motion, finger and orientation handling."
+readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
-dependencies = [
-    "hydra-core>=1.3",
-    "omegaconf>=2.3",
-    "peft>=0.18",
-    "bvhio",
-    "trimesh>=3.21.7",
-    "scenepic>=1.1.0",
-]
+# Runtime deps are tracked in requirements.txt (ComfyUI Manager reads that).
+dynamic = ["dependencies"]
 
 [project.urls]
-Repository = "https://github.com/nv-tlabs/kimodo"
+Repository = "https://github.com/stevelittlefish/ComfyUI-Kimodo-Enhanced"
 
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+# --- ComfyUI Manager / registry metadata ---
 [tool.comfy]
-PublisherId = "jtydhr88"
-DisplayName = "ComfyUI-Kimodo"
+PublisherId = "stevelittlefish"
+DisplayName = "ComfyUI-Kimodo-Enhanced"
 Icon = ""
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+</content>
