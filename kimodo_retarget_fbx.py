@@ -547,6 +547,7 @@ def retarget_animation(
     yaw_offset: float = 0.0,
     auto_fix_input_pose: bool = False,
     animate_in_place: bool = False,
+    root_origin_aligned: bool = False,
 ):
     """Retarget source motion onto the target skeleton.
 
@@ -561,9 +562,14 @@ def retarget_animation(
     keeping vertical motion, so the character walks/runs on the spot but still
     bobs, comes off the ground, and jumps. Off by default, the root translates
     fully (matches the source motion).
+
+    ``root_origin_aligned`` (default OFF) writes root translation from source-root
+    displacement only, without rotating the target bind-pose root offset around
+    the source hips. Use this when the renderer separately aligns a floor-rooted
+    target mesh to a hips-rooted source origin.
     """
     _log(f"--- Retargeting animation (auto_fix_input_pose={auto_fix_input_pose}, "
-         f"animate_in_place={animate_in_place}) ---")
+         f"animate_in_place={animate_in_place}, root_origin_aligned={root_origin_aligned}) ---")
     ret_rots = {}
     ret_locs = {}
 
@@ -691,7 +697,11 @@ def retarget_animation(
                 s_p = s_bone.world_location_animation.get(f, s_bone.world_matrix[3, :3])
 
                 s_r = R.from_quat([s_q[1], s_q[2], s_q[3], s_q[0]]).as_matrix()
-                p_world_f = p_local @ s_r.T + s_p
+                if root_origin_aligned:
+                    source_rest_root = s_bone.world_matrix[3, :3]
+                    p_world_f = t_rest_source_units + (s_p - source_rest_root)
+                else:
+                    p_world_f = p_local @ s_r.T + s_p
                 disp = p_world_f - t_rest_source_units
 
                 # In-place: drop horizontal travel (SOMA is Y-up, so X/Z are the

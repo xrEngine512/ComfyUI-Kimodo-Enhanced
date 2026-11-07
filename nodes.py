@@ -858,6 +858,12 @@ class Kimodo_PostProcess:
 
 
 # ---------------------------------------------------------------------------
+# Video renderer
+# ---------------------------------------------------------------------------
+from kimodo_render_video import Kimodo_Render3DVideo
+
+
+# ---------------------------------------------------------------------------
 # Node mappings
 # ---------------------------------------------------------------------------
 NODE_CLASS_MAPPINGS = {
@@ -872,6 +878,7 @@ NODE_CLASS_MAPPINGS = {
     # Preview
     "Kimodo_Preview": Kimodo_Preview,
     "Kimodo_Preview3D": Kimodo_Preview3D,
+    "Kimodo_Render3DVideo": Kimodo_Render3DVideo,
     # Export
     "Kimodo_SaveNPZ": Kimodo_SaveNPZ,
     "Kimodo_ExportBVH": Kimodo_ExportBVH,
@@ -886,6 +893,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Kimodo_PostProcess": "Kimodo Post Process",
     "Kimodo_Preview": "Kimodo Preview (2D)",
     "Kimodo_Preview3D": "Kimodo Preview 3D",
+    "Kimodo_Render3DVideo": "Kimodo Render 3D Body Pose Video",
     "Kimodo_SaveNPZ": "Kimodo Save NPZ",
     "Kimodo_ExportBVH": "Kimodo Export BVH",
     "Kimodo_ExportFBX": "Kimodo Export FBX (Mixamo)",

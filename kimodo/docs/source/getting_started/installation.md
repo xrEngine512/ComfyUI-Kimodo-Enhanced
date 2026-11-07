@@ -5,15 +5,13 @@
 > Note: This repo was developed and primarily tested on Linux
 
 There are two ways to install Kimodo: (1) as a package, or (2) download the source code and install.
-Both require setting up a Hugging Face token to use the text encoder at generation time.
+Both use the public `failspy/Meta-Llama-3-8B-Instruct-abliterated-v3` model with the LLM2Vec adapter at generation time.
 
-## Set Up Hugging Face Token
+## Hugging Face Downloads
 
-The Kimodo text encoder relies on the **gated** `meta-llama/Meta-Llama-3-8B-Instruct` model, which requires:
-- Your HF account has been granted access to the [model page](https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct).
-- You provide a HF token for runtime
+The text encoder model is public and does not require gated-model access approval. Hugging Face login is optional, but can help avoid download rate limits.
 
-After receiving access to the Llama repo, please create an access token [here](https://huggingface.co/settings/tokens/new?tokenType=read). Then use it to log in on your command line:
+To log in on the command line, create a read token [here](https://huggingface.co/settings/tokens/new?tokenType=read), then run:
 
 ```bash
 hf auth login

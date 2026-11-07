@@ -21,7 +21,7 @@ TEXT_ENCODER_PRESETS = {
     "llm2vec": {
         "target": "kimodo.model.LLM2VecEncoder",
         "kwargs": {
-            "base_model_name_or_path": "McGill-NLP/LLM2Vec-Meta-Llama-3-8B-Instruct-mntp",
+            "base_model_name_or_path": "failspy/Meta-Llama-3-8B-Instruct-abliterated-v3",
             "peft_model_name_or_path": "McGill-NLP/LLM2Vec-Meta-Llama-3-8B-Instruct-mntp-supervised",
             "dtype": "bfloat16",
             "llm_dim": 4096,

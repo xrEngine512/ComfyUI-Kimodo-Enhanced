@@ -100,21 +100,22 @@ Models download automatically from HuggingFace on first use:
 
 ### Manual Model Download
 
-Kimodo's text encoder uses Meta Llama 3 8B, which is a **gated model** on HuggingFace. You need to:
+Kimodo's text encoder uses the public `failspy/Meta-Llama-3-8B-Instruct-abliterated-v3` model with the LLM2Vec adapter. Gated-model access is not required. Hugging Face login is optional, but can help avoid download rate limits:
 
-1. Visit https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct and request access
-2. Create a token at https://huggingface.co/settings/tokens
-3. Log in and download all required models:
+To authenticate, create a read token at https://huggingface.co/settings/tokens and run:
 
 ```bash
 # Log in to HuggingFace
 huggingface-cli login
+```
 
-# Text encoder: Llama 3 base model (gated, requires access approval)
-huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct
+Download the models:
+
+```bash
+# Text encoder: public Llama 3 base model
+huggingface-cli download failspy/Meta-Llama-3-8B-Instruct-abliterated-v3
 
 # Text encoder: LLM2Vec adapters
-huggingface-cli download McGill-NLP/LLM2Vec-Meta-Llama-3-8B-Instruct-mntp
 huggingface-cli download McGill-NLP/LLM2Vec-Meta-Llama-3-8B-Instruct-mntp-supervised
 
 # Kimodo model (pick the one you want to use)
@@ -205,6 +206,10 @@ The NPZ output contains:
 - `root_positions` — Root trajectory `[T, 3]`
 - `foot_contacts` — Foot contact labels `[T, 4]`
 - `global_root_heading` — Root heading angle `[T]`
+
+## Kimodo Render 3D Body Pose Video
+
+**Kimodo Render 3D Body Pose Video** accepts the `motion` output from Kimodo Sampler and returns ComfyUI `VIDEO`. Set `render_style` to `mesh` to retarget the first motion sample onto the bundled **Quaternius Superhero Male** rig (CC0 1.0); the renderer colors the body warm skin-tone with light eyes and dark brows for a clearer front cue. `silhouette`, `openpose_2d`, `openpose_3d`, and `scail` remain joint-based visualizations. The mesh path aligns the target's floor-rooted pelvis to Kimodo's hip-rooted neutral origin and keeps that bind offset from orbiting as the hips rotate, so camera `target_y` is only a composition choice. Optional `camera_info` accepts Create Camera Info / Load3D camera data. The mesh asset's source and licenses are in `assets/quaternius/`.
 
 ## Credits
 

@@ -458,6 +458,8 @@ def export_kimodo_glb(
     auto_fix_input_pose: bool = False,
     fix_orientation: bool = False,
     animate_in_place: bool = False,
+    target_mapping=None,
+    root_origin_aligned: bool = False,
 ) -> str:
     """Retarget Kimodo SOMA motion onto a rigged glb and save an animated glb.
 
@@ -466,7 +468,11 @@ def export_kimodo_glb(
     authored tipped over (e.g. a Z-up Mixamo armature) back upright.
     ``animate_in_place`` (opt-in) keeps the character on the spot while preserving
     vertical motion (jumps). Any pre-existing animations on the target are always
-    stripped so the generated clip is the only one. Returns the path to the saved glb.
+    stripped so the generated clip is the only one. ``target_mapping`` optionally
+    overrides the standard SOMA-to-Mixamo names for a known target rig.
+    ``root_origin_aligned`` (opt-in) prevents a floor-rooted target pelvis bind
+    offset from orbiting around the hips-rooted source when the root rotates; pair
+    it with renderer-side rest-origin alignment. Returns the path to the saved glb.
     """
     _log("=" * 60)
     _log("KIMODO GLB EXPORT START")
@@ -494,13 +500,17 @@ def export_kimodo_glb(
         _log(f"  Source bones: {len(src_skel.bones)}  Target bones: {len(tgt_skel.bones)}")
 
         # 3. Retarget (shared math, SOMA -> Mixamo mapping).
-        mapping = SOMA_TO_MIXAMO if map_fingers else _body_only_mapping(SOMA_TO_MIXAMO)
+        mapping = (
+            target_mapping if target_mapping is not None
+            else (SOMA_TO_MIXAMO if map_fingers else _body_only_mapping(SOMA_TO_MIXAMO))
+        )
         _log(f"  Bone mapping: {len(mapping)} entries (map_fingers={map_fingers})")
         ret_rots, ret_locs = retarget_animation(
             src_skel, tgt_skel, mapping,
             force_scale=force_scale, yaw_offset=yaw_offset,
             auto_fix_input_pose=auto_fix_input_pose,
             animate_in_place=animate_in_place,
+            root_origin_aligned=root_origin_aligned,
         )
         if len(ret_rots) == 0:
             _log("WARNING: No bone pairs matched — glb will have no animation!")
